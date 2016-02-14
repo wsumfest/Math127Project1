@@ -21,7 +21,16 @@ class MarkovChain:
 
 
 
-def mutate(transition_matrix, time, dna_sequence):
+def mutate(alpa, time, dna_sequence):
+    transition_matrix = build_transition_matrix(alpha)
     markov_chain = MarkovChain(transition_matrix, time)
     new_seq = map(markov_chain.apply_to_char, dna_sequence)
     return "".join(new_seq)
+
+def build_transition_matrix(alpha):
+    vector1 = [(1 -(3*alpha)), alpha, alpha, alpha]
+    vector2 = [alpha, (1 -(3*alpha)), alpha, alpha]
+    vector3 = [alpha, alpha, (1 -(3*alpha)), alpha]
+    vector4 = [alpha, alpha, alpha, (1 -(3*alpha))]
+    transition_matrix = [vector1, vector2, vector3, vector4]
+    return transition_matrix
