@@ -4,7 +4,7 @@ Neighbor Joining algorithm and graph visualization software for Phylogenetic Pro
 Repository tree as of now: <br/> 
 
 /Math127 <br/>
-    /algorithms <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/algorithms <br/>
     "Holds the algorithms for the project"<br/>
         -mutate.py<br/> 
         "Jukes Cantor mutation model"<br/>
