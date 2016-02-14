@@ -4,15 +4,15 @@ Neighbor Joining algorithm and graph visualization software for Phylogenetic Pro
 Repository tree as of now: <br/> 
 
 /Math127 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/algorithms <br/>
-    "Holds the algorithms for the project"<br/>
-        -mutate.py<br/> 
-        "Jukes Cantor mutation model"<br/>
-        -neighborJoining.py<br/>
-        "Neighbor Joining algoithm"<br/>
-    /testing <br/>
-    "Testing suite for the project"<br/>
-        /algorithms <br/>
-        "Unit Test for algorithms"<br/>
-        /data<br/>
-        "Data Sets for testing"</br>
+&nbsp;&nbsp;/algorithms <br/>
+    &nbsp;&nbsp;"Holds the algorithms for the project"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;-mutate.py<br/> 
+        &nbsp;&nbsp;&nbsp;&nbsp;"Jukes Cantor mutation model"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;-neighborJoining.py<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;"Neighbor Joining algoithm"<br/>
+    &nbsp;&nbsp;/testing <br/>
+    &nbsp;&nbsp;"Testing suite for the project"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;/algorithms <br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;"Unit Test for algorithms"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;/data<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;"Data Sets for testing"</br>
