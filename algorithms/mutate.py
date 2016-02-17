@@ -1,8 +1,10 @@
 from numpy import linalg as LA
 import numpy as np
+import multiprocessing as mp
+from functools import partial
 
 
-class MarkovChain:
+class MarkovChain(object):
 
     def __init__(self, transition_matrix, time):
         self.transition_matrix = transition_matrix
@@ -21,10 +23,16 @@ class MarkovChain:
 
 
 
-def mutate(alpa, time, dna_sequence):
+def mutate(alpha, time, dna_sequence):
+    #Use as Pool of processes for multithreaded programming
+    pool = mp.Pool(processes=4)
+
     transition_matrix = build_transition_matrix(alpha)
     markov_chain = MarkovChain(transition_matrix, time)
-    new_seq = map(markov_chain.apply_to_char, dna_sequence)
+    my_func = partial(alias, markov_chain=markov_chain)
+
+    #Apply instance method over that dna_sequence with pool.map
+    new_seq = pool.map(my_func, dna_sequence)
     return "".join(new_seq)
 
 def build_transition_matrix(alpha):
@@ -34,3 +42,14 @@ def build_transition_matrix(alpha):
     vector4 = [alpha, alpha, alpha, (1 -(3*alpha))]
     transition_matrix = [vector1, vector2, vector3, vector4]
     return transition_matrix
+
+
+#Alias function that allows instance method for markov chain to be pickled for multiprocessing
+def alias(arg, markov_chain):
+    return markov_chain.apply_to_char(arg)
+
+
+
+
+
+
