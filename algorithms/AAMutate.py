@@ -29,7 +29,7 @@ def mutate(time, aa_sequence):
     #truncate last char == '\n'
     maximum_processes = int(proc.stdout.read()[:-1])
     #Use as Pool of processes for multithreaded programming
-    pool = mp.Pool(processes=20)
+    pool = mp.Pool(processes=maximum_processes)
 
     transition_matrix = build_transition_matrix()
     markov_chain = MarkovChain(transition_matrix, time)
