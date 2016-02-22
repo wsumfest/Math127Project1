@@ -2,6 +2,7 @@ from numpy import linalg as LA
 import numpy as np
 import multiprocessing as mp
 from functools import partial
+import subprocess
 
 
 class MarkovChain(object):
