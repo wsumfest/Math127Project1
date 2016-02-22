@@ -37,13 +37,21 @@ def build_example_nodes():
     node2 = mutate.PhylogeneticNode(dna2)
     return (node1, node2)
 
+def build_example_tree(phylo=0):
+    nodes = build_example_nodes()
+    vertices = [nodes[0], nodes[1]]
+    edges = [(nodes[0], nodes[1])]
+    if phylo > 0:
+        tree = mutate.PhylogeneticTree(vertices, edges)
+    else:
+        tree = mutate.Tree(vertices, edges)
+    return tree
+
+
 class TestTree(unittest.TestCase):
 
     def test_initializer(self):
-        nodes = build_example_nodes()
-        vertices = [nodes[0], nodes[1]]
-        edges = [(nodes[0], nodes[1])]
-        tree = mutate.Tree(vertices, edges)
+        tree = build_example_tree()
         self.assertIsInstance(tree, mutate.Tree)
 
     def test_getVertices(self):
@@ -63,42 +71,41 @@ class TestTree(unittest.TestCase):
         self.assertEqual(calc_edges, edges)
 
     def test_addVertex(self):
-        nodes = build_example_nodes()
-        vertices = [nodes[0], nodes[1]]
-        edges = [(nodes[0], nodes[1])]
-        tree = mutate.Tree(vertices, edges)
+        tree = build_example_tree()
         tree.add_vertex(mutate.PhylogeneticNode("actgtacacagtgtg"))
         self.assertEqual(len(tree.get_vertices()), 3)
 
     def test_addEdge(self):
-        nodes = build_example_nodes()
-        vertices = [nodes[0], nodes[1]]
-        edges = [(nodes[0], nodes[1])]
+        tree = build_example_tree()
         new_node = mutate.PhylogeneticNode("actgtacacagtgtgtg")
-        tree = mutate.Tree(vertices, edges)
         tree.add_vertex(new_node)
-        tree.add_edge((new_node, vertices[0]))
+        tree.add_edge((new_node, tree.get_vertices()[0]))
         self.assertEqual(len(tree.get_edges()), 2)
 
 class TestPhyloTree(unittest.TestCase):
 
     def test_initializer(self):
-        nodes = build_example_nodes()
-        vertices = [nodes[0], nodes[1]]
-        edges = [(nodes[0], nodes[1])]
-        tree = mutate.PhylogeneticTree(vertices, edges)
+        tree = build_example_tree(phylo=1)
         self.assertIsInstance(tree, mutate.PhylogeneticTree)
         self.assertEqual(tree.get_root_node(), None)
 
     def test_rootNode(self):
-        nodes = build_example_nodes()
-        vertices = [nodes[0], nodes[1]]
-        edges = [(nodes[0], nodes[1])]
-        tree = mutate.PhylogeneticTree(vertices, edges)
+        tree = build_example_tree(phylo=1)
         root = mutate.PhylogeneticNode("actgtacacagtgtgtg")
         tree.set_root_node(root)
         self.assertEqual(root, tree.get_root_node())
         self.assertEqual(len(tree.get_vertices()), 3)
+
+class MutateTest(unittest.TestCase):
+
+    def test_mutate(self):
+        dna = "actgatcgatcgatcgtcagctactgcatcgatcacgtgacgtatcatcgcatgctacgtagctacgtacgtacgactcgatgcatcgactgatgctacgtagctagctgatcgatcagtacgtacgtagctagctgcagcatcgatgcatagtcgatcgcatgcatgcatagtcgactacgtacgtagctgactgactgactgactacgatcgactgactacgggtgactaaaaaaaaacacacaccccacacacacacacacatactactatcactacgactcgatgagagaagtgaactacgagtcacagatgcatacagatgatgatagatagctagcatgatagcatgcagaagaactgatatctacacgtacgtactgactgacgtactgactgactgactgactgacgtacgtacgtactgacgtactgacgtacgtacgtactgactgacgtacgtacgtacgtacgtactactgacgtacgtacactgacgtacgtacgtactactacacgtactgactacgtacgtacgtacgtactcatctgactgactgactcgtactactacgtactactacgtactgactgactactgactgactgatcatagtatggcgcgcgcgcgacgtacgtcagtcagctgtcagctgtacgatgctgctagcagtcagactgactacgtacgtcagatgatgatgctagccatgctagtacgatgactgactacgatcg"
+        alpha = 0.33
+        t = 1000
+        tree = mutate.mutate(alpha, t, dna)
+        for node in tree.get_vertices():
+            print tree.get_root_node().get_sequence() + "\n\n"
+            print node.get_sequence() + "\n\n"
 
 
 

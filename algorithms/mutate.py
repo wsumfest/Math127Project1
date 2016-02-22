@@ -2,6 +2,7 @@ from numpy import linalg as LA
 import numpy as np
 import multiprocessing as mp
 from functools import partial
+import subprocess
 
 
 #Super class for our phylogenetic tree
@@ -73,13 +74,19 @@ class MarkovChain(object):
         self.transition_matrix = transition_matrix
         self.time = time
 
+    def get_transition_matrix(self):
+        return self.transition_matrix
+
+    def set_transition_matrix(self):
+        power_matrix = LA.matrix_power(self.transition_matrix, self.time)
+        self.transition_matrix = power_matrix
 
     def apply_to_char(self, char):
         assert(char == 'a' or char == 'c' or char == 't' or char == 'g')
         char_map = {"a": 0, "c": 1, "g": 2, "t": 3}
         index = char_map[char]
         base_vector = [.25, .25, .25, .25] #Assume uniform probability for bases in DNA
-        power_matrix = LA.matrix_power(self.transition_matrix, self.time)
+        power_matrix = self.transition_matrix
         transformation_vector = power_matrix[index]
         new_char = np.random.choice(char_map.keys(), p=transformation_vector)
         return new_char
@@ -91,21 +98,32 @@ def mutate(alpha, time, dna_sequence):
     root = PhylogeneticNode(dna_sequence)
     tree = PhylogeneticTree([],[], root)
 
+    #sets maximum number of processes
+    proc = subprocess.Popen(["sysctl", "-n", "hw.ncpu"], stdout=subprocess.PIPE)
+    #truncate last char == '\n'
+    maximum_processes = int(proc.stdout.read()[:-1])
+
 
     #Use as Pool of processes for multithreaded programming
-    pool = mp.Pool(processes=4)
+    pool = mp.Pool(processes=maximum_processes)
 
     transition_matrix = build_transition_matrix(alpha)
-    markov_chain = MarkovChain(transition_matrix, time)
-    my_func = partial(alias, markov_chain=markov_chain)
 
-    #Apply instance method over that dna_sequence with pool.map
-    new_seq = "".join(pool.map(my_func, dna_sequence))
-    next_node = PhylogeneticNode(new_seq)
-    phylo_dist = PhylogeneticNode.calculate_distance(root,next_node)
-    if (phylo_dist != 0):
-        tree.add_vertex(next_node)
-        tree.add_edge([(root,next_node), phylo_dist])
+    while time > 0:
+        markov_chain = MarkovChain(transition_matrix, 1)
+        markov_chain.set_transition_matrix()
+        my_func = partial(alias, markov_chain=markov_chain)
+
+        #Apply instance method over that dna_sequence with pool.map
+        new_seq = "".join(pool.map(my_func, dna_sequence))
+        next_node = PhylogeneticNode(new_seq)
+        phylo_dist = PhylogeneticNode.calculate_distance(root,next_node)
+        if (phylo_dist != 0):
+            tree.add_vertex(next_node)
+            tree.add_edge([(root,next_node), phylo_dist])
+            root = next_node
+        transition_matrix = markov_chain.get_transition_matrix()
+        time -= 1
 
     return tree
 
