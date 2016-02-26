@@ -1,5 +1,7 @@
 import unittest
 import mutate
+import time
+import timeit
 
 
 class TestNode(unittest.TestCase):
@@ -102,10 +104,13 @@ class MutateTest(unittest.TestCase):
         dna = "actgatcgatcgatcgtcagctactgcatcgatcacgtgacgtatcatcgcatgctacgtagctacgtacgtacgactcgatgcatcgactgatgctacgtagctagctgatcgatcagtacgtacgtagctagctgcagcatcgatgcatagtcgatcgcatgcatgcatagtcgactacgtacgtagctgactgactgactgactacgatcgactgactacgggtgactaaaaaaaaacacacaccccacacacacacacacatactactatcactacgactcgatgagagaagtgaactacgagtcacagatgcatacagatgatgatagatagctagcatgatagcatgcagaagaactgatatctacacgtacgtactgactgacgtactgactgactgactgactgacgtacgtacgtactgacgtactgacgtacgtacgtactgactgacgtacgtacgtacgtacgtactactgacgtacgtacactgacgtacgtacgtactactacacgtactgactacgtacgtacgtacgtactcatctgactgactgactcgtactactacgtactactacgtactgactgactactgactgactgatcatagtatggcgcgcgcgcgacgtacgtcagtcagctgtcagctgtacgatgctgctagcagtcagactgactacgtacgtcagatgatgatgctagccatgctagtacgatgactgactacgatcg"
         alpha = 0.33
         t = 1000
-        tree = mutate.mutate(alpha, t, dna)
-        for node in tree.get_vertices():
-            print tree.get_root_node().get_sequence() + "\n\n"
-            print node.get_sequence() + "\n\n"
+        a = timeit.default_timer()
+        tree = mutate.mutate(alpha, t, dna, 4)
+        b = timeit.default_timer()
+        # for node in tree.get_vertices():
+        #     print tree.get_root_node().get_sequence() + "\n\n"
+        #     print node.get_sequence() + "\n\n"
+        print str(b-a)
 
 
 

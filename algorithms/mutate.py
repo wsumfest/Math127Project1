@@ -3,7 +3,7 @@ import numpy as np
 import multiprocessing as mp
 from functools import partial
 import subprocess
-
+import time
 
 #Super class for our phylogenetic tree
 class Tree(object):
@@ -93,19 +93,19 @@ class MarkovChain(object):
 
 
 
-def mutate(alpha, time, dna_sequence):
+def mutate(alpha, time, dna_sequence, threads):
     #We construct our phylogenetic tree here, as well as declare the root node
     root = PhylogeneticNode(dna_sequence)
     tree = PhylogeneticTree([],[], root)
 
-    #sets maximum number of processes
-    proc = subprocess.Popen(["sysctl", "-n", "hw.ncpu"], stdout=subprocess.PIPE)
-    #truncate last char == '\n'
-    maximum_processes = int(proc.stdout.read()[:-1])
+    #sets maximum number of processes for our final implementation
+    # proc = subprocess.Popen(["sysctl", "-n", "hw.ncpu"], stdout=subprocess.PIPE)
+    # #truncate last char == '\n'
+    # maximum_processes = int(proc.stdout.read()[:-1])
 
 
     #Use as Pool of processes for multithreaded programming
-    pool = mp.Pool(processes=maximum_processes)
+    pool = mp.Pool(processes=threads)
 
     transition_matrix = build_transition_matrix(alpha)
 
