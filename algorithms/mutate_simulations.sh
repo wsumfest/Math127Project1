@@ -3,7 +3,7 @@ THREADS="1"
 
 rm -f $OUTPUT_FILE
 
-while [[ $THREADS -lt 5 ]]; do
+while [[ $THREADS -lt 9 ]]; do
     echo -e "Running 5 simulations on $THREADS threads ..." >> $OUTPUT_FILE
     SIMULATION="1"
     while [[ $SIMULATION -lt 6 ]]; do
