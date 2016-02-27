@@ -16,4 +16,6 @@ Repository tree as of now: <br/>
         &nbsp;&nbsp;&nbsp;&nbsp;"Unit tests for our classes"<br/>
 
 To run the testing suite for this repo, cd into the algorithms folder and run "make test".
+
+To test the effeciency of mutate over threads, change the permission of mutate_simulations.sh (chmod u+x mutate_simulations.sh). Then run the script. It will create a repository "simulations" with csv files logging the simulation.
     
