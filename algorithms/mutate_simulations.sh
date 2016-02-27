@@ -20,4 +20,4 @@ done
 make clean
 make classes
 java -cp . $EXECUTABLE $OUTPUT_FILE
-
+LAST_FILE=$(./get_last_file.sh)
