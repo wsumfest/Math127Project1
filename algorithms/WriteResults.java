@@ -29,48 +29,29 @@ public class WriteResults {
 
             FileReader fileReader = new FileReader(filename);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String cpuTime = null;
+            String userTime = null;
+            String kernelTime = null;
+            int threads = 1;
             while ((line = bufferedReader.readLine()) != null) {
                 if (line.length() < 5) {
                     continue;
                 }
 
                 if (line.substring(0,8).equals("Threads:") ) {
-                    int threads = Integer.parseInt(line.substring(8));
-                    String cpuTime = null;
-                    String userTime = null;
-                    String kernelTime = null;
-                    while ((line = bufferedReader.readLine()) != null) {
-                        if (line == null){
-                            break;
-                        }
-                        else if (line.length() < 12) {
-                            continue;
-                        } 
-                        else if (line.substring(0,4).equals("real")) {
-                            cpuTime = line.substring(7,12);
-                        }
-                        else if (line.substring(0,4).equals("user")) {
-                            userTime = line.substring(7,12);
-                        }
-                        else if (line.substring(0,3).equals("sys")) {
-                            kernelTime = line.substring(6,11);
-                            String writeLine = String.format("%d,%s,%s,%s\n", threads, cpuTime, userTime,kernelTime);
-                            bufferedWriter.write(writeLine);
-                            int BUFFER_SIZE = 1000;
-                            bufferedReader.mark(BUFFER_SIZE);
-                            String next_line = bufferedReader.readLine();
-                            bufferedReader.reset();
-                            if (line.length() < 12){
-                                continue;
-                            } else {
-
-                                break;
-                            }
-                        }
-
-                    }
+                    threads = Integer.parseInt(line.substring(8));
                 }
-
+                else if (line.substring(0,4).equals("real")) {
+                    cpuTime = line.substring(7,12);
+                    }
+                else if (line.substring(0,4).equals("user")) {
+                    userTime = line.substring(7,12);
+                }
+                else if (line.substring(0,3).equals("sys")) {
+                    kernelTime = line.substring(6,11);
+                    String writeLine = String.format("%d,%s,%s,%s\n", threads, cpuTime, userTime,kernelTime);
+                    bufferedWriter.write(writeLine);
+                }
             }
             bufferedReader.close();
             bufferedWriter.close();
