@@ -3,11 +3,12 @@ THREADS="1"
 EXECUTABLE="WriteResults"
 
 rm -f $OUTPUT_FILE
+mkdir -p "../simulations"
 
 while [[ $THREADS -lt 9 ]]; do
     echo -e "Threads:$THREADS" >> $OUTPUT_FILE
     SIMULATION="1"
-    while [[ $SIMULATION -lt 26 ]]; do
+    while [[ $SIMULATION -lt 101 ]]; do
         echo -e "Running simulation on $THREADS threads ...\n"
         ( time python -c "from test_threads_cpu import test_mutate; test_mutate($THREADS)" ) 2>> $OUTPUT_FILE
         SIMULATION=$[$SIMULATION + 1]
