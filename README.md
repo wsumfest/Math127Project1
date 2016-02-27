@@ -14,6 +14,9 @@ Repository tree as of now: <br/>
         &nbsp;&nbsp;&nbsp;&nbsp;"Neighbor Joining algoithm"<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;-Test.py<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;"Unit tests for our classes"<br/>
+&nbsp;&nbsp;/Simulations</br>
+    &nbsp;&nbsp;"Simulations of Thread Effeciency"<br/>
+
 
 To run the testing suite for this repo, cd into the algorithms folder and run "make test".
 
