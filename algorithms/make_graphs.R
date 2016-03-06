@@ -1,0 +1,11 @@
+install.packages("ggplot2", repos="http://cran.rstudio.com/")
+library("ggplot2")
+args = commandArgs(trailingOnly=TRUE)
+relative_ouput <- gsub(" ","", args[2], fixed = TRUE)
+threads_data <- read.csv(args[1])
+
+file_path <- paste("/Users/williamsumfest/math127project1/", relative_ouput)
+relative_file_path <- gsub(" ","", file_path, fixed = TRUE)
+jpeg(relative_file_path)
+ggplot(threads_data, aes(x=Threads, y=CpuTime)) + geom_boxplot() + ggtitle("Program time for Thread Configuration")
+dev.off()

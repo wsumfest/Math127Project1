@@ -1,28 +1,38 @@
 from numpy import linalg as LA
 import numpy as np
-import multiprocessing as mp
+from multiprocessing.dummy import Process
 from functools import partial
 import subprocess
 import time
+import pdb
+import threading
+
+BEST_THREAD_LEVEL=2
+
+
 
 #Super class for our phylogenetic tree
 class Tree(object):
 
-    def __init__(self, vertices, edges):
-        self.vertices = vertices
+    def __init__(self, nodes, edges):
+        self.nodes = nodes
         self.edges = edges
 
-    def get_vertices(self):
-        return self.vertices
+    def get_nodes(self):
+        return self.nodes
 
     def get_edges(self):
         return self.edges
 
-    def add_vertex(self,v1):
-        self.vertices.append(v1)
+    def add_node(self, v1):
+        self.nodes.append(v1)
 
-    def add_edge(self,edge):
-        self.edges.append(edge)
+    def add_edge(self, node1, node2):
+        tup = (node1, node2, node1.calculate_distance(node2))
+        self.edges.append(tup)
+
+    def __str__(self):
+        return
 
 
 #Class that represents a node in our phylogenetic tree
@@ -37,10 +47,9 @@ class PhylogeneticNode(object):
     def get_sequence(self):
         return self.dna_sequence
 
-    @staticmethod
-    def calculate_distance(node1,node2):
-        dna1 = node1.get_sequence()
-        dna2 = node2.get_sequence();
+    def calculate_distance(self,node2):
+        dna1 = self.get_sequence()
+        dna2 = node2.get_sequence()
         different_characters = 0
         assert(len(dna1) == len(dna2))
         for i in range(0,len(dna1)):
@@ -48,84 +57,73 @@ class PhylogeneticNode(object):
                 different_characters += 1
         return different_characters
 
-#Class that we will be constructing when we call our mutate function
-class PhylogeneticTree(Tree):
-
-    def __init__(self, vertices, edges, root_node=None):
-        self.vertices = vertices
-        self.edges = edges
-        self.root_node = root_node
-        if root_node:
-            self.vertices.append(root_node)
-
-    def get_root_node(self):
-        return self.root_node
-
-    def set_root_node(self, node):
-        if node not in self.get_vertices():
-            self.add_vertex(node)
-        self.root_node = node
+    def __str__(self):
+        return self.get_sequence()
 
 
-#Class that simulates a Markov Chain
-class MarkovChain(object):
+def mutate_module(matrix, node, threads=1):
+    new_seq = []
+    main_seq = list(node.get_sequence())
+    dna_len = len(main_seq)
+    curr_thread, bottom_index, top_index = 1,0, (len(main_seq)//threads)
+    while curr_thread <= threads:
+        if curr_thread == threads:
+            top_index = dna_len
+        sub_sequence = main_seq[bottom_index:top_index]
+        current_thread = threading.Thread(target=mutate, args=(matrix, sub_sequence))
+        current_thread.start() 
+        bottom_index = top_index
+        top_index *= 2
+        curr_thread += 1
+        try:
+            current_thread.join()
+        except RuntimeError:
+            print "can't join thread"
 
-    def __init__(self, transition_matrix, time):
-        self.transition_matrix = transition_matrix
-        self.time = time
+        new_seq += sub_sequence
 
-    def get_transition_matrix(self):
-        return self.transition_matrix
+    new_seq = "".join(new_seq)
 
-    def set_transition_matrix(self):
-        power_matrix = LA.matrix_power(self.transition_matrix, self.time)
-        self.transition_matrix = power_matrix
+    new_node = PhylogeneticNode(new_seq)
 
-    def apply_to_char(self, char):
-        assert(char == 'a' or char == 'c' or char == 't' or char == 'g')
-        char_map = {"a": 0, "c": 1, "g": 2, "t": 3}
+    node_heur = determine_heurestic(node, new_node)
+
+    if node_heur != -1:
+        return new_node
+
+    return -1
+
+
+
+def mutate(matrix, dna_list):
+    char_map = {"A": 0, "C": 1, "T": 2, "G": 3}
+
+    #Apply instance method over that dna_sequence with pool.map
+    for i in range(0, len(dna_list)):
+        char = dna_list[i]
         index = char_map[char]
-        base_vector = [.25, .25, .25, .25] #Assume uniform probability for bases in DNA
-        power_matrix = self.transition_matrix
-        transformation_vector = power_matrix[index]
+        transformation_vector = matrix[index]
         new_char = np.random.choice(char_map.keys(), p=transformation_vector)
-        return new_char
+        dna_list[i] = new_char
+    
+    thread = threading.current_thread()
+    try:
+        thread.join()
+
+    except RuntimeError:
+        return 
 
 
+def determine_heurestic(origin_node, mutated_node):
+    seq_len = len(origin_node.get_sequence())
+    different_characters = PhylogeneticNode.calculate_distance(origin_node, mutated_node)
 
-def mutate(alpha, time, dna_sequence, threads):
-    #We construct our phylogenetic tree here, as well as declare the root node
-    root = PhylogeneticNode(dna_sequence)
-    tree = PhylogeneticTree([],[], root)
+    if different_characters > (seq_len // 200):
+        return 1
 
-    #sets maximum number of processes for our final implementation
-    # proc = subprocess.Popen(["sysctl", "-n", "hw.ncpu"], stdout=subprocess.PIPE)
-    # #truncate last char == '\n'
-    # maximum_processes = int(proc.stdout.read()[:-1])
+    return -1
 
 
-    #Use as Pool of processes for multithreaded programming
-    pool = mp.Pool(processes=threads)
-
-    transition_matrix = build_transition_matrix(alpha)
-
-    while time > 0:
-        markov_chain = MarkovChain(transition_matrix, 1)
-        markov_chain.set_transition_matrix()
-        my_func = partial(alias, markov_chain=markov_chain)
-
-        #Apply instance method over that dna_sequence with pool.map
-        new_seq = "".join(pool.map(my_func, dna_sequence))
-        next_node = PhylogeneticNode(new_seq)
-        phylo_dist = PhylogeneticNode.calculate_distance(root,next_node)
-        if (phylo_dist != 0):
-            tree.add_vertex(next_node)
-            tree.add_edge([(root,next_node), phylo_dist])
-            root = next_node
-        transition_matrix = markov_chain.get_transition_matrix()
-        time -= 1
-
-    return tree
 
 def build_transition_matrix(alpha):
     vector1 = [(1 -(3*alpha)), alpha, alpha, alpha]
@@ -136,8 +134,34 @@ def build_transition_matrix(alpha):
     return transition_matrix
 
 
-#Alias function that allows instance method for markov chain to be pickled for multiprocessing
-def alias(arg, markov_chain):
-    return markov_chain.apply_to_char(arg)
 
+def simulate_evolution(dna_sequence, alpha, time, dt, threads=1):
+    tree = Tree([PhylogeneticNode(dna_sequence)], [])
+    transition_matrix = build_transition_matrix(alpha)
+    power_matrix = LA.matrix_power(transition_matrix, dt)
+
+    while time > 0:
+        i = 0
+        fixed_length = len(tree.get_nodes())
+        while i < fixed_length:
+            node = tree.get_nodes()[i]
+            next_node = mutate_module(power_matrix, node, threads=threads)
+            if next_node != -1:
+                tree.add_node(next_node)
+                tree.add_edge(node, next_node)
+            i += 1
+        time -= dt
+
+    return tree
+
+
+
+def main():
+
+    return 
+
+
+
+if __name__ == '__main__':
+    main()
 

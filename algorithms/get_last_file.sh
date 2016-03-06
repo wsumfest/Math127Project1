@@ -6,7 +6,8 @@ get_last_saved_file (){
         CURRENT_DIR="${CURRENT_DIR}/${FILE}"
         get_last_saved_file
     fi
-    echo $FILE
+    FILE_WITH_EXTENSION="${PWD}/${FILE}"
+    echo $FILE_WITH_EXTENSION
     exit
 }
 
