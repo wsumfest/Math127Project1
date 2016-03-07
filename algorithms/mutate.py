@@ -1,13 +1,12 @@
 from numpy import linalg as LA
 import numpy as np
-from multiprocessing.dummy import Process
+import multiprocessing
 from functools import partial
 import subprocess
 import time
 import pdb
-import threading
-
-BEST_THREAD_LEVEL=2
+import gc
+import scipy
 
 
 
@@ -61,64 +60,90 @@ class PhylogeneticNode(object):
         return self.get_sequence()
 
 
-def mutate_module(matrix, node, threads=1):
+def mutate_module(matrix, origin_seq, threads=1):
+    manager = multiprocessing.Manager()
     new_seq = []
-    main_seq = list(node.get_sequence())
-    dna_len = len(main_seq)
-    curr_thread, bottom_index, top_index = 1,0, (len(main_seq)//threads)
+    jobs = []
+    dna_len = len(origin_seq)
+    origin = []
+    for i in range(0, dna_len):
+        origin.append(origin_seq[i])
+
+    man_list = manager.list(origin_seq)
+
+    curr_thread, bottom_index, top_index = 1,0, (dna_len//threads)
     while curr_thread <= threads:
         if curr_thread == threads:
             top_index = dna_len
-        sub_sequence = main_seq[bottom_index:top_index]
-        current_thread = threading.Thread(target=mutate, args=(matrix, sub_sequence))
-        current_thread.start() 
+        current_thread = multiprocessing.Process(target=mutate, args=(matrix, man_list, top_index, bottom_index))
+        jobs.append(current_thread)
+        current_thread.start()
         bottom_index = top_index
         top_index *= 2
         curr_thread += 1
-        try:
-            current_thread.join()
-        except RuntimeError:
-            print "can't join thread"
 
-        new_seq += sub_sequence
 
-    new_seq = "".join(new_seq)
+    for job in jobs:
+        job.join()
+
+    del jobs
+    
+    for val in man_list:
+        new_seq.append(val)
+
+
+    origin = "".join(origin)
+    origin_node = PhylogeneticNode(origin)
+
+    # pdb.set_trace()
 
     new_node = PhylogeneticNode(new_seq)
 
-    node_heur = determine_heurestic(node, new_node)
+    node_heur = determine_heurestic(origin_node, new_node)
 
     if node_heur != -1:
+
         return new_node
 
     return -1
 
 
 
-def mutate(matrix, dna_list):
-    char_map = {"A": 0, "C": 1, "T": 2, "G": 3}
+def mutate(matrix, dna_list, top_index, bottom_index):
+    char_map = {"A": 0, "C": 1, "G": 2, "T": 3}
 
-    #Apply instance method over that dna_sequence with pool.map
-    for i in range(0, len(dna_list)):
+    ###THIS WAS THE WORST BUG EVER GAAAAHHHHHHH####
+    np.random.seed()
+    
+    # pdb.set_trace()
+
+    for i in range(bottom_index, top_index):
         char = dna_list[i]
         index = char_map[char]
         transformation_vector = matrix[index]
-        new_char = np.random.choice(char_map.keys(), p=transformation_vector)
-        dna_list[i] = new_char
-    
-    thread = threading.current_thread()
-    try:
-        thread.join()
+        choice = np.random.rand(1,1)
+        if choice <= transformation_vector[0]:
+            new_char = 'A'
+        elif choice <= transformation_vector[0] + transformation_vector[1]:
+            new_char = 'C'
+        elif choice <= transformation_vector[0] + transformation_vector[1] + transformation_vector[2]:
+            new_char = 'G'
+        else:
+            new_char = 'T'
 
-    except RuntimeError:
-        return 
+        dna_list[i] = new_char
+        del choice
+
+    return
+
+    
 
 
 def determine_heurestic(origin_node, mutated_node):
     seq_len = len(origin_node.get_sequence())
     different_characters = PhylogeneticNode.calculate_distance(origin_node, mutated_node)
 
-    if different_characters > (seq_len // 200):
+    if float(float(different_characters)/float(seq_len)) >= 0.005:
         return 1
 
     return -1
@@ -143,25 +168,22 @@ def simulate_evolution(dna_sequence, alpha, time, dt, threads=1):
     while time > 0:
         i = 0
         fixed_length = len(tree.get_nodes())
+        node_list = tree.get_nodes()
         while i < fixed_length:
-            node = tree.get_nodes()[i]
-            next_node = mutate_module(power_matrix, node, threads=threads)
+            node = node_list[i]
+            origin_sequence = node.get_sequence()
+            wrapper = list(origin_sequence)
+            next_node = mutate_module(power_matrix, wrapper, threads=threads)
+
             if next_node != -1:
                 tree.add_node(next_node)
                 tree.add_edge(node, next_node)
+
+            gc.collect()
             i += 1
         time -= dt
+        print time
 
     return tree
 
-
-
-def main():
-
-    return 
-
-
-
-if __name__ == '__main__':
-    main()
 
