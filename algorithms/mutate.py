@@ -37,8 +37,12 @@ class Tree(object):
 #Class that represents a node in our phylogenetic tree
 class PhylogeneticNode(object):
 
+    number = 1
+
     def __init__(self, dna_sequence):
         self.dna_sequence = dna_sequence
+        self.number = PhylogeneticNode.number
+        PhylogeneticNode.number += 1
 
     def set_dna_sequence(self,dna):
         self.dna_sequence = dna
@@ -57,35 +61,36 @@ class PhylogeneticNode(object):
         return different_characters
 
     def __str__(self):
-        return self.get_sequence()
+        return str(self.number)
 
 
 def mutate_module(matrix, origin_seq, threads=1):
     manager = multiprocessing.Manager()
     new_seq = []
     jobs = []
-    dna_len = len(origin_seq)
     origin = []
+
+    man_list = manager.list(origin_seq)
+    dna_len = len(man_list)
+
     for i in range(0, dna_len):
         origin.append(origin_seq[i])
 
-    man_list = manager.list(origin_seq)
-
-    curr_thread, bottom_index, top_index = 1,0, (dna_len//threads)
+    curr_thread, bottom_index, top_index, len_of_block = 1,0, (dna_len//threads), (dna_len//threads)
     while curr_thread <= threads:
         if curr_thread == threads:
             top_index = dna_len
+        np.random.seed()
         current_thread = multiprocessing.Process(target=mutate, args=(matrix, man_list, top_index, bottom_index))
         jobs.append(current_thread)
         current_thread.start()
         bottom_index = top_index
-        top_index *= 2
+        top_index += len_of_block
         curr_thread += 1
 
 
     for job in jobs:
         job.join()
-
     del jobs
     
     for val in man_list:
@@ -118,21 +123,27 @@ def mutate(matrix, dna_list, top_index, bottom_index):
     # pdb.set_trace()
 
     for i in range(bottom_index, top_index):
-        char = dna_list[i]
-        index = char_map[char]
-        transformation_vector = matrix[index]
-        choice = np.random.rand(1,1)
-        if choice <= transformation_vector[0]:
-            new_char = 'A'
-        elif choice <= transformation_vector[0] + transformation_vector[1]:
-            new_char = 'C'
-        elif choice <= transformation_vector[0] + transformation_vector[1] + transformation_vector[2]:
-            new_char = 'G'
-        else:
-            new_char = 'T'
+        try:
+            char = dna_list[i]
+            index = char_map[char]
+            transformation_vector = matrix[index]
+            choice = np.random.rand(1,1)
+            if choice <= transformation_vector[0]:
+                new_char = 'A'
+            elif choice <= transformation_vector[0] + transformation_vector[1]:
+                new_char = 'C'
+            elif choice <= transformation_vector[0] + transformation_vector[1] + transformation_vector[2]:
+                new_char = 'G'
+            else:
+                new_char = 'T'
 
-        dna_list[i] = new_char
-        del choice
+            dna_list[i] = new_char
+            del choice
+        except IndexError:
+            print i
+            print top_index
+            print len(dna_list)
+            break
 
     return
 
@@ -143,13 +154,14 @@ def determine_heurestic(origin_node, mutated_node):
     seq_len = len(origin_node.get_sequence())
     different_characters = PhylogeneticNode.calculate_distance(origin_node, mutated_node)
 
-    if float(float(different_characters)/float(seq_len)) >= 0.005:
+    if float(different_characters)/float(seq_len) > 0.05:
         return 1
 
     return -1
 
 
 
+#alpha must be in [0.00, 0.33]
 def build_transition_matrix(alpha):
     vector1 = [(1 -(3*alpha)), alpha, alpha, alpha]
     vector2 = [alpha, (1 -(3*alpha)), alpha, alpha]
@@ -169,6 +181,9 @@ def simulate_evolution(dna_sequence, alpha, time, dt, threads=1):
         i = 0
         fixed_length = len(tree.get_nodes())
         node_list = tree.get_nodes()
+        if fixed_length > 10:
+            return tree
+
         while i < fixed_length:
             node = node_list[i]
             origin_sequence = node.get_sequence()

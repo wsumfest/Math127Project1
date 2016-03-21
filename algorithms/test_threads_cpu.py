@@ -9,8 +9,12 @@ matrix = np.linalg.matrix_power(matrix, time)
 
 def test_mutate(threads):
 
-    node = mutate.PhylogeneticNode(dna)
+    dna_seq = list(dna)
 
-    new_node = mutate.mutate_module(matrix, node, threads)
+    new_node = mutate.mutate_module(matrix, dna_seq, threads)
 
     return
+
+
+if __name__ == '__main__':
+    test_mutate(8)

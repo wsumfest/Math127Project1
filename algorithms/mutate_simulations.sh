@@ -28,6 +28,7 @@ run_simulation() {
     java -cp . $EXECUTABLE $OUTPUT_FILE
 }
 
+# run_simulation
 run_simulation
 chmod u+x get_last_file.sh
 LAST_FILE=$(./get_last_file.sh)
@@ -49,5 +50,6 @@ cd ".."
 Rscript --vanilla algorithms/make_graphs.R $LAST_FILE $MAC_GRAPH_OUTPUT_FILE
 Rscript --vanilla algorithms/make_graphs.R $LINUX_LAST_FILE $LINUX_GRAPH_OUTPUT_FILE
 open -a Finder $MAC_GRAPH_OUTPUT_FILE
+sleep 2
 open -a Finder $LINUX_GRAPH_OUTPUT_FILE
 
